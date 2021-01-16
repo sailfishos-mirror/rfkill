@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # rfkill control code
 #
@@ -84,7 +84,7 @@ class RFKill(object):
     @property
     def soft_blocked(self):
         return self.blocked[0]
-        
+
     @soft_blocked.setter
     def soft_blocked(self, block):
         if block:
@@ -97,28 +97,27 @@ class RFKill(object):
         return self.blocked[1]
 
     def block(self):
-        rfk = open('/dev/rfkill', 'w', buffering=0)
+        rfk = open('/dev/rfkill', 'wb', buffering=0)
         s = struct.pack(_event_struct, self.idx, TYPE_ALL, _OP_CHANGE, 1, 0)
         rfk.write(s)
         rfk.close()
 
     def unblock(self):
-        rfk = open('/dev/rfkill', 'w', buffering=0)
+        rfk = open('/dev/rfkill', 'wb', buffering=0)
         s = struct.pack(_event_struct, self.idx, TYPE_ALL, _OP_CHANGE, 0, 0)
         rfk.write(s)
         rfk.close()
 
     @classmethod
     def block_all(cls, t=TYPE_ALL):
-        rfk = open('/dev/rfkill', 'w', buffering=0)
-        print rfk
+        rfk = open('/dev/rfkill', 'wb', buffering=0)
         s = struct.pack(_event_struct, 0, t, _OP_CHANGE_ALL, 1, 0)
         rfk.write(s)
         rfk.close()
 
     @classmethod
     def unblock_all(cls, t=TYPE_ALL):
-        rfk = open('/dev/rfkill', 'w', buffering=0)
+        rfk = open('/dev/rfkill', 'wb', buffering=0)
         s = struct.pack(_event_struct, 0, t, _OP_CHANGE_ALL, 0, 0)
         rfk.write(s)
         rfk.close()
@@ -126,13 +125,15 @@ class RFKill(object):
     @classmethod
     def list(cls):
         res = []
-        rfk = open('/dev/rfkill', 'r', buffering=0)
+        rfk = open('/dev/rfkill', 'rb', buffering=0)
         fd = rfk.fileno()
         flgs = fcntl.fcntl(fd, fcntl.F_GETFL)
         fcntl.fcntl(fd, fcntl.F_SETFL, flgs | os.O_NONBLOCK)
         while True:
             try:
                 d = rfk.read(_event_sz)
+                if d is None:
+                    break
                 _idx, _t, _op, _s, _h = struct.unpack(_event_struct, d)
                 if _op != _OP_ADD:
                     continue
@@ -145,6 +146,6 @@ class RFKill(object):
 
 if __name__ == "__main__":
     for r, s, h in RFKill.list():
-        print "%d: %s: %s" % (r.idx, r.name, r.type_name)
-        print "\tSoft blocked: %s" % ("yes" if s else "no")
-        print "\tHard blocked: %s" % ("yes" if h else "no")
+        print("%d: %s: %s" % (r.idx, r.name, r.type_name))
+        print("\tSoft blocked: %s" % ("yes" if s else "no"))
+        print("\tHard blocked: %s" % ("yes" if h else "no"))
