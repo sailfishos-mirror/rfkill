@@ -58,9 +58,10 @@ static void rfkill_event(void)
 		}
 
 		gettimeofday(&tv, NULL);
-		printf("%ld.%06u: idx %u type %u op %u soft %u hard %u\n",
+		printf("%ld.%06u: idx %u type %u op %u soft %u hard %u hard block reasons 0x%02x\n",
 			(long) tv.tv_sec, (unsigned int) tv.tv_usec,
-			event.idx, event.type, event.op, event.soft, event.hard);
+			event.idx, event.type, event.op, event.soft, event.hard,
+			event.hard_block_reasons);
 		fflush(stdout);
 	}
 
@@ -244,6 +245,16 @@ static int rfkill_list(const char *param)
 						type2string(event.type));
 		printf("\tSoft blocked: %s\n", event.soft ? "yes" : "no");
 		printf("\tHard blocked: %s\n", event.hard ? "yes" : "no");
+		if (len >= RFKILL_EVENT_SIZE_V1 + 1) {
+			printf("\tHard block reasons: ");
+			if (event.hard_block_reasons == 0)
+				printf("[NONE]");
+			if (event.hard_block_reasons & RFKILL_HARD_BLOCK_NOT_OWNER)
+				printf("[NOT_OWNER]");
+			if (event.hard_block_reasons & RFKILL_HARD_BLOCK_SIGNAL)
+				printf("[SIGNAL]");
+			printf("\n");
+		}
 	}
 
 	close(fd);
