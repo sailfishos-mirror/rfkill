@@ -45,13 +45,14 @@ static void rfkill_event(void)
 		if (n == 0)
 			continue;
 
+		memset(&event, 0, sizeof(event));
 		len = read(fd, &event, sizeof(event));
 		if (len < 0) {
 			perror("Reading of RFKILL events failed");
 			break;
 		}
 
-		if (len != RFKILL_EVENT_SIZE_V1) {
+		if (len < RFKILL_EVENT_SIZE_V1) {
 			fprintf(stderr, "Wrong size of RFKILL event\n");
 			continue;
 		}
@@ -206,6 +207,7 @@ static int rfkill_list(const char *param)
 	}
 
 	while (1) {
+		memset(&event, 0, sizeof(event));
 		len = read(fd, &event, sizeof(event));
 		if (len < 0) {
 			if (errno == EAGAIN)
@@ -214,7 +216,7 @@ static int rfkill_list(const char *param)
 			break;
 		}
 
-		if (len != RFKILL_EVENT_SIZE_V1) {
+		if (len < RFKILL_EVENT_SIZE_V1) {
 			fprintf(stderr, "Wrong size of RFKILL event\n");
 			continue;
 		}
