@@ -59,6 +59,8 @@ enum rfkill_type {
  * @RFKILL_OP_DEL: a device was removed
  * @RFKILL_OP_CHANGE: a device's state changed -- userspace changes one device
  * @RFKILL_OP_CHANGE_ALL: userspace changes all devices (of a type, or all)
+ *	into a state, also updating the default state used for devices that
+ *	are hot-plugged later.
  */
 enum rfkill_operation {
 	RFKILL_OP_ADD = 0,
@@ -68,12 +70,24 @@ enum rfkill_operation {
 };
 
 /**
+ * enum rfkill_hard_block_reasons - hard block reasons
+ * @RFKILL_HARD_BLOCK_SIGNAL: the hardware rfkill signal is active
+ * @RFKILL_HARD_BLOCK_NOT_OWNER: the NIC is not owned by the host
+ */
+enum rfkill_hard_block_reasons {
+	RFKILL_HARD_BLOCK_SIGNAL	= 1 << 0,
+	RFKILL_HARD_BLOCK_NOT_OWNER	= 1 << 1,
+};
+
+/**
  * struct rfkill_event - events for userspace on /dev/rfkill
  * @idx: index of dev rfkill
  * @type: type of the rfkill struct
  * @op: operation code
  * @hard: hard state (0/1)
  * @soft: soft state (0/1)
+ * @hard_block_reasons: valid if hard is set. One or several reasons from
+ *	&enum rfkill_hard_block_reasons.
  *
  * Structure used for userspace communication on /dev/rfkill,
  * used for events from the kernel and control to the kernel.
@@ -82,7 +96,9 @@ struct rfkill_event {
 	__u32 idx;
 	__u8  type;
 	__u8  op;
-	__u8  soft, hard;
+	__u8  soft;
+	__u8  hard;
+	__u8  hard_block_reasons;
 } __attribute__((packed));
 
 /*
